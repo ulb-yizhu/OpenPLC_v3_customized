@@ -49,6 +49,7 @@ uint8_t bool_input_buf[MAX_MB_IO];
 uint8_t bool_output_buf[MAX_MB_IO];
 uint16_t int_input_buf[MAX_MB_IO];
 uint16_t int_output_buf[MAX_MB_IO];
+uint8_t rpi_modbus_rts_pin;     // If <> 0, expect hardware RTS to be used with this pin
 
 pthread_mutex_t ioLock;
 
@@ -315,7 +316,7 @@ void parseConfig()
     }
     else
     {
-        unsigned char log_msg[1000];
+        char log_msg[1000];
         sprintf(log_msg, "Skipping configuration of Slave Devices (mbconfig.cfg file not found)\n");
         log(log_msg);
     }
@@ -354,7 +355,7 @@ void *querySlaveDevices(void *arg)
 {
     while (run_openplc)
     {
-        unsigned char log_msg[1000];
+        char log_msg[1000];
         
         uint16_t bool_input_index = 0;
         uint16_t bool_output_index = 0;
@@ -637,7 +638,7 @@ void initializeMB()
                 if (mb_devices[i].rtu_baud != mb_devices[share_index].rtu_baud || mb_devices[i].rtu_parity != mb_devices[share_index].rtu_parity || 
                     mb_devices[i].rtu_data_bit != mb_devices[share_index].rtu_data_bit || mb_devices[i].rtu_stop_bit != mb_devices[share_index].rtu_stop_bit)
                 {
-                    unsigned char log_msg[1000];
+                    char log_msg[1000];
                     sprintf(log_msg, "Warning MB device %s port setting missmatch\n", mb_devices[i].dev_name);
                     log(log_msg);
                 }
@@ -648,6 +649,13 @@ void initializeMB()
                 mb_devices[i].mb_ctx = modbus_new_rtu(mb_devices[i].dev_address, mb_devices[i].rtu_baud,
                                                 mb_devices[i].rtu_parity, mb_devices[i].rtu_data_bit,
                                                 mb_devices[i].rtu_stop_bit);
+
+                // If hardware layer set modbus_rts_pin, enable Pi specific rts handling handling
+                if (rpi_modbus_rts_pin != 0) {
+                    modbus_enable_rpi(mb_devices[i].mb_ctx,TRUE);
+                    modbus_configure_rpi_bcm_pin(mb_devices[i].mb_ctx,rpi_modbus_rts_pin);
+                    modbus_rpi_pin_export_direction(mb_devices[i].mb_ctx);
+                }
             }
         }
         
