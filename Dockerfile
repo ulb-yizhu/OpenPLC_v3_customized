@@ -20,6 +20,7 @@ RUN ln -s /persistent/dnp3.cfg /workdir/webserver/dnp3.cfg
 RUN ln -s /persistent/st_files /workdir/webserver/st_files
 RUN apt-get update
 RUN apt-get install -y python3-pip
+RUN apt-get install iproute2 iputils-ping -y
 RUN pip3 install -r ./requirements.txt
 
 ENTRYPOINT ["./start_openplc.sh"]
