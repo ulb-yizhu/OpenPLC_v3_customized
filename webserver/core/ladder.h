@@ -121,7 +121,7 @@ extern int ignored_int_outputs[];
 //main.cpp
 void sleep_until(struct timespec *ts, long long delay);
 void sleepms(int milliseconds);
-void log(unsigned char *logmsg);
+void log(char *logmsg);
 bool pinNotPresent(int *ignored_vector, int vector_size, int pinNumber);
 extern uint8_t run_openplc;
 extern unsigned char log_buffer[1000000];
@@ -159,6 +159,7 @@ void initializeMB();
 void *querySlaveDevices(void *arg);
 void updateBuffersIn_MB();
 void updateBuffersOut_MB();
+extern uint8_t rpi_modbus_rts_pin;     // If <> 0, expect hardware RTS to be used with this pin
 
 //dnp3.cpp
 void dnp3StartServer(int port);
