@@ -44,6 +44,11 @@ function linux_install_deps {
         $1 apt-get install -y build-essential pkg-config bison flex autoconf \
                               automake libtool make git \
                               sqlite3 cmake curl python3 python3-venv
+    #Installing dependencies for opensuse tumbleweed
+    elif [ -x /usr/bin/zypper ]; then
+        $1 zypper ref
+        $1 zypper in -y curl make automake gcc gcc-c++ kernel-devel pkg-config bison flex autoconf libtool openssl-devel cmake libmodbus-devel
+        $1 zypper in -y python python-xml python3 python3-pip 
     else
         fail "Unsupported linux distro."
     fi
@@ -66,9 +71,29 @@ function install_wiringpi {
     ) || fail "Failed to install wiringpi."
 }
 
+function install_pigpio {
+    echo "[PIGPIO]"
+    echo "Trying distribution package..."
+    sudo apt-get install -y pigpio && return 0
+
+    echo "Falling back to direct download..."
+    local URL="https://github.com/joan2937/pigpio/archive/master.zip"
+    (
+        set -e
+        wget -c "$URL"
+        unzip master.zip
+        cd pigpio-master
+        make
+        sudo make install
+        rm -f master.zip
+    )
+}
+
 function install_py_deps {
     python3 -m venv "$VENV_DIR"
-    "$VENV_DIR/bin/python3" -m pip install flask==2.1 werkzeug==2.1 flask-login==0.6.2 pyserial pymodbus==2.5.3
+    "$VENV_DIR/bin/python3" -m pip install --upgrade pip
+    "$VENV_DIR/bin/python3" -m pip install flask==2.3.3 werkzeug==2.3.7 flask-login==0.6.2 pyserial pymodbus==2.5.3
+    python3 -m pip install pymodbus==2.5.3
 }
 
 function swap_on {
@@ -238,7 +263,7 @@ if [ "$1" == "win" ]; then
     #Setting up venv
     python3 -m venv "$VENV_DIR"
     "$VENV_DIR/bin/python3" get-pip3.py
-    "$VENV_DIR/bin/python3" -m pip install flask==2.1 werkzeug==2.1 flask-login==0.6.2 pyserial pymodbus==2.5.3
+    "$VENV_DIR/bin/python3" -m pip install flask==2.3.3 werkzeug==2.3.7 flask-login==0.6.2 pyserial pymodbus==2.5.3
 
     echo ""
     echo "[MATIEC COMPILER]"
@@ -275,7 +300,7 @@ elif [ "$1" == "docker" ]; then
 elif [ "$1" == "rpi" ]; then
     echo "Installing OpenPLC on Raspberry Pi"
     linux_install_deps sudo
-    install_wiringpi
+    install_pigpio
     install_py_deps
     install_all_libs sudo
     install_systemd_service sudo

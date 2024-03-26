@@ -18,9 +18,8 @@ RUN ln -s /persistent/persistent.file /workdir/webserver/persistent.file
 RUN ln -s /persistent/openplc.db /workdir/webserver/openplc.db
 RUN ln -s /persistent/dnp3.cfg /workdir/webserver/dnp3.cfg
 RUN ln -s /persistent/st_files /workdir/webserver/st_files
-RUN apt update
-RUN apt install iproute2 iputils-ping -y
-RUN apt install python3-pip y
+RUN apt-get update
+RUN apt-get install -y python3-pip
 RUN pip3 install -r ./requirements.txt
 
 ENTRYPOINT ["./start_openplc.sh"]
